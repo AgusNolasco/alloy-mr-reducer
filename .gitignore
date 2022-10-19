@@ -1,3 +1,8 @@
+# MRs
+output/
+solvers/
+experiments/init_env.sh
+
 .DS_Store
 .gradle/
 generated/
