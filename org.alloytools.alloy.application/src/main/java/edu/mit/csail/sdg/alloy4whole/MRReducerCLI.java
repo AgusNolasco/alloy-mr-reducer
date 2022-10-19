@@ -22,12 +22,16 @@ import edu.mit.csail.sdg.parser.CompUtil;
 import edu.mit.csail.sdg.translator.*;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public final class MRReducerCLI {
 
     private static String alloyHome = null;
+    private static String OUTPUT_DIR;
+    private static String CLASS_NAME;
 
     private static final String   fs = System.getProperty("file.separator");
     private static  String alloyHome() {
@@ -145,17 +149,29 @@ public final class MRReducerCLI {
         options.solver = A4Options.SatSolver.MiniSatJNI;
         options.solverDirectory = binary;
 
-        String MREPAInferenceDir = "/Users/agustinnolasco/Documents/university/MFIS/metamorphic-relations-inference/";
-        String RandoopMRsDir = "/Users/agustinnolasco/Documents/university/MFIS/randoop-mr-inference/";
-        String clazz = "MyBoundedStack";
-        String outputDir = "output/" + clazz + "/";
+        String mrInferenceDir = Optional.ofNullable(System.getenv("MR_INFERENCE_DIR")).orElseThrow(
+                () -> new IllegalStateException("MR_INFERENCE_DIR is not set in the environment"));
+        String randoopDir = Optional.ofNullable(System.getenv("RANDOOP_DIR")).orElseThrow(
+                () -> new IllegalStateException("RANDOOP_DIR is not set in the environment"));
 
-        File file = new File(MREPAInferenceDir + outputDir + "EPA_alloy_model.als");
+        String clazz = args[0];
+        OUTPUT_DIR = "output/" + clazz + "/";
+        String EPAAlloyModelDir = mrInferenceDir + "/" + OUTPUT_DIR;
+        String MRsPredModelsDir = randoopDir + "/" + OUTPUT_DIR;
+
+        if (Files.notExists(Paths.get(EPAAlloyModelDir))) {
+            throw new IllegalArgumentException("The path: " + EPAAlloyModelDir + " does not exist");
+        }
+        if (Files.notExists(Paths.get(MRsPredModelsDir))) {
+            throw new IllegalArgumentException("The path: " + MRsPredModelsDir + " does not exist");
+        }
+
+        File file = new File(EPAAlloyModelDir + "EPA_alloy_model.als");
         FileReader reader = new FileReader(file);
         BufferedReader bufferedReader = new BufferedReader(reader);
         String EPAModel = bufferedReader.lines().collect(Collectors.joining("\n"));
 
-        file = new File(RandoopMRsDir + outputDir + "MRs_alloy_predicates.als");
+        file = new File(MRsPredModelsDir + "MRs_alloy_predicates.als");
         reader = new FileReader(file);
         bufferedReader = new BufferedReader(reader);
 
@@ -208,11 +224,24 @@ public final class MRReducerCLI {
         Set<String> reducedSetOfMRs = new HashSet<>(mrToPredicate.keySet());
         reducedSetOfMRs.removeAll(impliedMRs);
 
-        System.out.println("Reduced MRs: \n");
-        System.out.println(String.join("\n", reducedSetOfMRs));
+        saveResults(reducedSetOfMRs, impliedMRs);
+    }
 
-        System.out.println("\nImplied MRs: \n");
-        System.out.println(String.join("\n", impliedMRs));
+    private static void saveResults(Set<String> reducedSetOfMRs, Set<String> impliedMRs) {
+        File directory = new File(OUTPUT_DIR);
+        if (!directory.exists()){
+            directory.mkdirs();
+        }
+
+        try (FileWriter writer = new FileWriter(OUTPUT_DIR + "reduction.txt")) {
+            writer.write("Reduced Set of MRs: \n\n");
+            writer.write(String.join("\n", reducedSetOfMRs));
+            writer.write("\n");
+            writer.write("\nImplied MRs: \n\n");
+            writer.write(String.join("\n", impliedMRs));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }
