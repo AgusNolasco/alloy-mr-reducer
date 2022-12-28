@@ -31,7 +31,6 @@ public final class MRReducerCLI {
 
     private static String alloyHome = null;
     private static String OUTPUT_DIR;
-    private static String CLASS_NAME;
 
     private static final String   fs = System.getProperty("file.separator");
     private static  String alloyHome() {
