@@ -30,7 +30,6 @@ import java.util.stream.Collectors;
 public final class MRReducerCLI {
 
     private static String alloyHome = null;
-    private static String OUTPUT_DIR;
 
     private static final String   fs = System.getProperty("file.separator");
     private static  String alloyHome() {
@@ -154,9 +153,11 @@ public final class MRReducerCLI {
                 () -> new IllegalStateException("RANDOOP_DIR is not set in the environment"));
 
         String clazz = args[0];
-        OUTPUT_DIR = "output/" + clazz + "/";
-        String EPAAlloyModelDir = mrInferenceDir + "/" + OUTPUT_DIR;
-        String MRsPredModelsDir = randoopDir + "/" + OUTPUT_DIR;
+        String gen_strategy = args[1];
+        String mrs_to_fuzz = args[2];
+        String allow_epa_loops = args[3];
+        String EPAAlloyModelDir = mrInferenceDir + "/output/" + clazz + "/" + "allow_epa_loops_" + allow_epa_loops + "/";
+        String MRsPredModelsDir = randoopDir + "/output/" + clazz + "/" + "allow_epa_loops_" + allow_epa_loops + "/" + gen_strategy + "/" + mrs_to_fuzz + "/";
 
         if (Files.notExists(Paths.get(EPAAlloyModelDir))) {
             throw new IllegalArgumentException("The path: " + EPAAlloyModelDir + " does not exist");
@@ -165,12 +166,12 @@ public final class MRReducerCLI {
             throw new IllegalArgumentException("The path: " + MRsPredModelsDir + " does not exist");
         }
 
-        File file = new File(EPAAlloyModelDir + "EPA_alloy_model.als");
+        File file = new File(EPAAlloyModelDir + "epa-alloy-model.als");
         FileReader reader = new FileReader(file);
         BufferedReader bufferedReader = new BufferedReader(reader);
         String EPAModel = bufferedReader.lines().collect(Collectors.joining("\n"));
 
-        file = new File(MRsPredModelsDir + "MRs_alloy_predicates.als");
+        file = new File(MRsPredModelsDir + "mrs-alloy-predicates.als");
         reader = new FileReader(file);
         bufferedReader = new BufferedReader(reader);
 
@@ -223,16 +224,17 @@ public final class MRReducerCLI {
         Set<String> reducedSetOfMRs = new HashSet<>(mrToPredicate.keySet());
         reducedSetOfMRs.removeAll(impliedMRs);
 
-        saveResults(reducedSetOfMRs, impliedMRs);
+        String outputDir = "output/" + clazz + "/" + "allow_epa_loops_" + allow_epa_loops + "/" + gen_strategy + "/" + mrs_to_fuzz + "/";
+        saveResults(outputDir, reducedSetOfMRs, impliedMRs);
     }
 
-    private static void saveResults(Set<String> reducedSetOfMRs, Set<String> impliedMRs) {
-        File directory = new File(OUTPUT_DIR);
+    private static void saveResults(String outputDir, Set<String> reducedSetOfMRs, Set<String> impliedMRs) {
+        File directory = new File(outputDir);
         if (!directory.exists()){
             directory.mkdirs();
         }
 
-        try (FileWriter writer = new FileWriter(OUTPUT_DIR + "reduction.txt")) {
+        try (FileWriter writer = new FileWriter(outputDir + "mrs.txt")) {
             writer.write("Reduced Set of MRs: \n\n");
             writer.write(String.join("\n", reducedSetOfMRs));
             writer.write("\n");
