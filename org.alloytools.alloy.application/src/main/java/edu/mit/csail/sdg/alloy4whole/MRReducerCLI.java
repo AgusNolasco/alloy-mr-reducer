@@ -176,9 +176,11 @@ public final class MRReducerCLI {
         bufferedReader = new BufferedReader(reader);
 
         Map<String, String> mrToPredicate = new HashMap<>();
+        Map<String, String> mrToFormattedMr = new HashMap<>();
         for (String line : bufferedReader.lines().collect(Collectors.toSet())) {
-            String[] mrAndPred = line.split(" # ");
-            mrToPredicate.put(mrAndPred[0], mrAndPred[1]);
+            String[] data = line.split(" # ");
+            mrToPredicate.put(data[0], data[1]);
+            mrToFormattedMr.put(data[0], data[2]);
         }
 
         Set<String> impliedMRs = new HashSet<>();
@@ -223,9 +225,27 @@ public final class MRReducerCLI {
 
         Set<String> reducedSetOfMRs = new HashSet<>(mrToPredicate.keySet());
         reducedSetOfMRs.removeAll(impliedMRs);
+        Set<String> reducedSetOfFormattedMrs = new HashSet<>();
+        for (String mr : reducedSetOfMRs) {
+            reducedSetOfFormattedMrs.add(mrToFormattedMr.get(mr));
+        }
 
         String outputDir = "output/" + clazz + "/" + "allow_epa_loops_" + allow_epa_loops + "/" + gen_strategy + "/" + mrs_to_fuzz + "/";
         saveResults(outputDir, reducedSetOfMRs, impliedMRs);
+        saveFormattedMrs(outputDir, reducedSetOfFormattedMrs);
+    }
+
+    private static void saveFormattedMrs(String outputDir, Set<String> reducedSetOfFormattedMrs) {
+        File directory = new File(outputDir);
+        if (!directory.exists()){
+            directory.mkdirs();
+        }
+
+        try (FileWriter writer = new FileWriter(outputDir + "formatted-mrs.txt")) {
+            writer.write(String.join("\n", reducedSetOfFormattedMrs));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private static void saveResults(String outputDir, Set<String> reducedSetOfMRs, Set<String> impliedMRs) {
