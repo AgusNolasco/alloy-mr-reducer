@@ -139,7 +139,7 @@ public final class MRReducerCLI {
             java.lang.reflect.Field old = ClassLoader.class.getDeclaredField("usr_paths");
             old.setAccessible(true);
             old.set(null, newarray);
-        } catch (Throwable ex) {
+        } catch (Throwable ignored) {
         }
         loadLibrary("minisat");
         A4Reporter reporter = new A4Reporter();
@@ -175,56 +175,60 @@ public final class MRReducerCLI {
         reader = new FileReader(file);
         bufferedReader = new BufferedReader(reader);
 
+        List<String> mrs = new ArrayList<>();
         Map<String, String> mrToPredicate = new HashMap<>();
         Map<String, String> mrToFormattedMr = new HashMap<>();
         for (String line : bufferedReader.lines().collect(Collectors.toSet())) {
             String[] data = line.split(" # ");
+            mrs.add(data[0]);
             mrToPredicate.put(data[0], data[1]);
             mrToFormattedMr.put(data[0], data[2]);
         }
 
-        Set<String> impliedMRs = new HashSet<>();
-        for (String mr1 : mrToPredicate.keySet()) {
-            for (String mr2 : mrToPredicate.keySet()) {
-                if (!mr1.equals(mr2)) {
-                    String toCheck = EPAModel +
-                            "\npred MR1[] { " + mrToPredicate.get(mr1) + " }" +
-                            "\npred MR2[] { " + mrToPredicate.get(mr2) + " }" +
-                            "\nassert MR1ImpliesMR2 { MR1[] implies MR2[] }\n" +
-                            "check MR1ImpliesMR2 for 10\n" +
-                            "assert MR2ImpliesMR1 { MR2[] implies MR1[] }\n" +
-                            "check MR2ImpliesMR1 for 10";
-                    CompModule world = CompUtil.parseEverything_fromString(reporter, toCheck);
-                    ConstList<Command> commands = world.getAllCommands();
-                    assert commands.size() == 2;
-                    boolean[] results = new boolean[2];
-                    for (int i = 0; i < commands.size(); i++) {
-                        Command c = commands.get(i);
-                        A4Solution sol;
-                        sol = TranslateAlloyToKodkod.execute_command(null, world.getAllReachableSigs(), c, options);
-                        results[i] = !sol.satisfiable(); // Alloy checks satisfiability over the negation of the predicate
-                    }
-                    System.out.println("MR1: " + mr1);
-                    System.out.println("MR2: " + mr2);
-                    if (results[0] && results[1]) {
-                        System.out.println("MR1 is equivalent to MR2");
-                        impliedMRs.add(mr1.length() > mr2.length() ? mr1 : mr2);
-                    } else if (results[0]) {
-                        System.out.println("MR1 implies MR2");
-                        impliedMRs.add(mr2);
-                    } else if (results[1]) {
-                        System.out.println("MR2 implies MR1");
-                        impliedMRs.add(mr1);
-                    } else {
-                        System.out.println("There's no any implication");
-                    }
-                    System.out.println("********************");
-                }
+        mrs.sort(mrsComparator);
+
+        {
+            int i = 0;
+            for (String mr : mrs) {
+                System.out.println(++i + " - " + mr);
             }
         }
 
-        Set<String> reducedSetOfMRs = new HashSet<>(mrToPredicate.keySet());
+        Set<String> impliedMRs = new HashSet<>();
+        for (int i = 0; i < mrs.size(); i++) {
+            String mr = mrs.get(i);
+            String otherMRsPredicates = mrs.subList(i + 1, mrs.size()).stream()
+                    .map(mr2 -> "(" + mrToPredicate.get(mr2) + ")").collect(Collectors.joining(" and "));
+            String toCheck = EPAModel +
+                    "\npred MR[] { " + mrToPredicate.get(mr) + " }" +
+                    "\npred OthersMRs[] { " + otherMRsPredicates + " }" +
+                    "\nassert MRIsImplied { OthersMRs[] implies MR[] }\n" +
+                    "check MRIsImplied for 10";
+            System.out.println(i);
+            System.out.println(toCheck);
+            CompModule world = CompUtil.parseEverything_fromString(reporter, toCheck);
+            ConstList<Command> commands = world.getAllCommands();
+            assert commands.size() == 1;
+            boolean result;
+            Command c = commands.get(0);
+            A4Solution sol;
+            sol = TranslateAlloyToKodkod.execute_command(null, world.getAllReachableSigs(), c, options);
+            result = !sol.satisfiable(); // Alloy checks satisfiability over the negation of the predicate
+            System.out.println("MR: " + mr);
+            if (result) {
+                System.out.println("The MR is implicated by the others");
+                impliedMRs.add(mr);
+            } else {
+                System.out.println("There's no implication");
+            }
+            System.out.println("********************");
+        }
+
+        Set<String> reducedSetOfMRs = new HashSet<>(mrs);
         reducedSetOfMRs.removeAll(impliedMRs);
+
+        System.out.println(String.join("\n", reducedSetOfMRs));
+
         Set<String> reducedSetOfFormattedMrs = new HashSet<>();
         for (String mr : reducedSetOfMRs) {
             reducedSetOfFormattedMrs.add(mrToFormattedMr.get(mr));
@@ -264,5 +268,28 @@ public final class MRReducerCLI {
             throw new RuntimeException(e);
         }
     }
+
+    private static Comparator<String> mrsComparator = (mr1, mr2) -> {
+        String prop1 = mr1.split(" -> ")[1];
+        String prop2 = mr2.split(" -> ")[1];
+        String leftPart1 = prop1.split(" = ")[0];
+        String rightPart1 = prop1.split(" = ")[1];
+        String leftPart2 = prop2.split(" = ")[0];
+        String rightPart2 = prop2.split(" = ")[1];
+
+        int mr1Size = 0;
+        int mr2Size = 0;
+
+        if (!leftPart1.equals("λ")) {
+            mr1Size += leftPart1.split(" ").length;
+        }
+        if (!leftPart2.equals("λ")) {
+            mr2Size += leftPart2.split(" ").length;
+        }
+        mr1Size += rightPart1.split(" ").length;
+        mr2Size += rightPart2.split(" ").length;
+
+        return mr2Size - mr1Size;
+    };
 
 }
