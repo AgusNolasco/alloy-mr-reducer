@@ -245,7 +245,7 @@ public final class MRReducerCLI {
             directory.mkdirs();
         }
 
-        try (FileWriter writer = new FileWriter(outputDir + "formatted-mrs.txt")) {
+        try (FileWriter writer = new FileWriter(outputDir + "formatted-mrs.csv")) {
             writer.write(String.join("\n", reducedSetOfFormattedMrs));
         } catch (IOException e) {
             throw new RuntimeException(e);
