@@ -205,6 +205,7 @@ public final class MRReducerCLI {
                     "\nassert MRIsImplied { OthersMRs[] implies MR[] }\n" +
                     "check MRIsImplied for 10";
             System.out.println(i);
+            toCheck = toCheck.replaceAll("set", "sett");
             System.out.println(toCheck);
             CompModule world = CompUtil.parseEverything_fromString(reporter, toCheck);
             ConstList<Command> commands = world.getAllCommands();
