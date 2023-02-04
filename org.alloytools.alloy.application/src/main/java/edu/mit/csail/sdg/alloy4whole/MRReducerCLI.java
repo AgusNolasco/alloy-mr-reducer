@@ -203,7 +203,7 @@ public final class MRReducerCLI {
                     "\npred MR[] { " + mrToPredicate.get(mr) + " }" +
                     "\npred OthersMRs[] { " + otherMRsPredicates + " }" +
                     "\nassert MRIsImplied { OthersMRs[] implies MR[] }\n" +
-                    "check MRIsImplied for 10";
+                    "check MRIsImplied for 15";
             System.out.println(i);
             toCheck = toCheck.replaceAll("set", "sett");
             System.out.println(toCheck);
