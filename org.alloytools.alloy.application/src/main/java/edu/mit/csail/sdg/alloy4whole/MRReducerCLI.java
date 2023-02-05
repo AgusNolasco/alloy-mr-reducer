@@ -194,6 +194,10 @@ public final class MRReducerCLI {
             }
         }
 
+        List<String> modelLines = Arrays.asList(EPAModel.split("\n"));
+        List<String> epaStates = modelLines.subList(modelLines.indexOf("fact{") + 1, modelLines.size());
+        epaStates = epaStates.subList(0, epaStates.indexOf("}"));
+
         Set<String> impliedMRs = new HashSet<>();
         for (int i = 0; i < mrs.size(); i++) {
             String mr = mrs.get(i);
@@ -203,7 +207,7 @@ public final class MRReducerCLI {
                     "\npred MR[] { " + mrToPredicate.get(mr) + " }" +
                     "\npred OthersMRs[] { " + otherMRsPredicates + " }" +
                     "\nassert MRIsImplied { OthersMRs[] implies MR[] }\n" +
-                    "check MRIsImplied for 15";
+                    "check MRIsImplied for " + epaStates.size();
             System.out.println(i);
             toCheck = toCheck.replaceAll("set", "sett");
             System.out.println(toCheck);
