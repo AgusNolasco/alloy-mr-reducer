@@ -210,9 +210,8 @@ public final class MRReducerCLI {
                     "\npred OthersMRs[] { " + otherMRsPredicates + " }" +
                     "\nassert MRIsImplied { OthersMRs[] implies MR[] }\n" +
                     "check MRIsImplied for " + (2 * epaStates.size());
-            System.out.println(i);
+            System.out.println(i+1);
             toCheck = toCheck.replaceAll("set", "sett");
-            System.out.println(toCheck);
             CompModule world = CompUtil.parseEverything_fromString(reporter, toCheck);
             ConstList<Command> commands = world.getAllCommands();
             assert commands.size() == 1;
