@@ -199,6 +199,7 @@ public final class MRReducerCLI {
         epaStates = epaStates.subList(0, epaStates.indexOf("}"));
 
         System.out.println("EPA STATES NUM:" + epaStates.size());
+        epaStates = epaStates.stream().map(s -> s.replaceAll("some", "").replaceAll(" ", "").replaceAll("\t", "")).collect(Collectors.toList());
 
         Set<String> impliedMRs = new HashSet<>();
         for (int i = 0; i < mrs.size(); i++) {
@@ -209,7 +210,8 @@ public final class MRReducerCLI {
                     "\npred MR[] { " + mrToPredicate.get(mr) + " }" +
                     "\npred OthersMRs[] { " + otherMRsPredicates + " }" +
                     "\nassert MRIsImplied { OthersMRs[] implies MR[] }\n" +
-                    "check MRIsImplied for " + (2 * epaStates.size());
+                    "check MRIsImplied for 0 but " + epaStates.stream().map(s -> "3 " + s).collect(Collectors.joining(", "));
+            System.out.println(toCheck);
             System.out.println(i+1);
             toCheck = toCheck.replaceAll("set", "sett");
             CompModule world = CompUtil.parseEverything_fromString(reporter, toCheck);
