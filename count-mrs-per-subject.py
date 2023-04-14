@@ -22,6 +22,8 @@ def split_mrs(mrs):
 
 for subject in os.listdir('output'):
     path_to_mrs = f'output/{subject}/allow_epa_loops_{allow_epa_loops}/{gen_strategy}/{mrs_to_fuzz}/mrs.txt'
+    if not os.path.isfile(path_to_mrs):
+        continue
     with open(path_to_mrs) as mrs_file:
         mrs = [line.rstrip() for line in mrs_file]
         first_mark = mrs.index('')
