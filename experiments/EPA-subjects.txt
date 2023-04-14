@@ -1,7 +1,6 @@
 JDBCResultSet
 ListItr
 MyBoundedStack
-MyBoundedStackNoException
 NumberFormatStringTokenizer
 NumberFormatStringTokenizer_m
 SMTPProcessor
