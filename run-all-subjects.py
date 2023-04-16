@@ -13,8 +13,4 @@ with open(subjects_path) as subjects_file:
         subject = subject.strip()
         if '#' in subject:
             continue
-        print('Running: ' + subject)
-        result = subprocess.run(f'experiments/run.sh {subject} {gen_strategy} {mrs_to_fuzz} {allow_epa_loops}', shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        output = result.stderr.decode('utf-8')
-        values = output.split('\n')
-        print(f'{subject}: {values[-2]}')
+        result = subprocess.run(f'experiments/run.sh {subject} {gen_strategy} {mrs_to_fuzz} {allow_epa_loops}', shell=True)
