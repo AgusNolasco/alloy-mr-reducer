@@ -142,6 +142,8 @@ public final class MRReducerCLI {
         } catch (Throwable ignored) {
         }
         loadLibrary("minisat");
+        System.out.println("Hola");
+        System.out.println("Hola");
         A4Reporter reporter = new A4Reporter();
         A4Options options = new A4Options();
         options.solver = A4Options.SatSolver.MiniSatJNI;
@@ -156,8 +158,9 @@ public final class MRReducerCLI {
         String gen_strategy = args[1];
         String mrs_to_fuzz = args[2];
         String allow_epa_loops = args[3];
+        String seed = args[4];
         String EPAAlloyModelDir = mrInferenceDir + "/output/" + clazz + "/" + "allow_epa_loops_" + allow_epa_loops + "/";
-        String MRsPredModelsDir = randoopDir + "/output/" + clazz + "/" + "allow_epa_loops_" + allow_epa_loops + "/" + gen_strategy + "/" + mrs_to_fuzz + "/";
+        String MRsPredModelsDir = randoopDir + "/output/" + clazz + "/" + "allow_epa_loops_" + allow_epa_loops + "/" + gen_strategy + "/" + mrs_to_fuzz + "/" + seed + "/";
 
         if (Files.notExists(Paths.get(EPAAlloyModelDir))) {
             throw new IllegalArgumentException("The path: " + EPAAlloyModelDir + " does not exist");
@@ -242,7 +245,7 @@ public final class MRReducerCLI {
             reducedSetOfFormattedMrs.add(mrToFormattedMr.get(mr));
         }
 
-        String outputDir = "output/" + clazz + "/" + "allow_epa_loops_" + allow_epa_loops + "/" + gen_strategy + "/" + mrs_to_fuzz + "/";
+        String outputDir = "output/" + clazz + "/" + "allow_epa_loops_" + allow_epa_loops + "/" + gen_strategy + "/" + mrs_to_fuzz + "/" + seed + "/";
         saveResults(outputDir, reducedSetOfMRs, impliedMRs);
         saveFormattedMrs(outputDir, reducedSetOfFormattedMrs);
     }
