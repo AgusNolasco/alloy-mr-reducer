@@ -142,8 +142,6 @@ public final class MRReducerCLI {
         } catch (Throwable ignored) {
         }
         loadLibrary("minisat");
-        System.out.println("Hola");
-        System.out.println("Hola");
         A4Reporter reporter = new A4Reporter();
         A4Options options = new A4Options();
         options.solver = A4Options.SatSolver.MiniSatJNI;
